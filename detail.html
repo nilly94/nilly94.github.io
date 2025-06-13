@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户详情</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #1a1b26;
+      color: white;
+    }
+    .slider {
+      position: relative;
+      overflow: hidden;
+    }
+    .slider img {
+      width: 100%;
+      height: auto;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .slider-controls {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 1rem;
+      pointer-events: none;
+    }
+    .slider-controls button {
+      pointer-events: auto;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      font-size: 1.25rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .slider-controls button:hover {
+      background: rgba(0,0,0,0.8);
+    }
+    .indicators {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+    }
+    .indicator-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+    }
+    .indicator-dot.active {
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="slider mb-4 relative">
+      <div id="sliderImages" class="relative"></div>
+      <div id="sliderIndicators" class="indicators"></div>
+      <div class="slider-controls">
+        <button onclick="prevImage()">&#10094;</button>
+        <button onclick="nextImage()">&#10095;</button>
+      </div>
+    </div>
+
+    <video id="video" class="w-full mb-4 max-h-[400px] object-cover rounded" controls>
+      <source src="https://samplelib.com/lib/preview/mp4/sample-5s.mp4" type="video/mp4" />
+      浏览器不支持 video 标签。
+    </video>
+
+    <div id="details" class="bg-gray-800 p-6 rounded space-y-2 text-sm sm:text-base"></div>
+
+    <div class="text-center mt-6">
+      <a href="index.html" class="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 rounded">返回首页</a>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(sessionStorage.getItem('selectedUser'));
+    if (!data) {
+      document.body.innerHTML = '<div class="text-center py-20 text-white">用户数据丢失，请从首页点击进入。</div>';
+    } else {
+      const detailContainer = document.getElementById('details');
+      const sliderContainer = document.getElementById('sliderImages');
+      const indicatorContainer = document.getElementById('sliderIndicators');
+      let currentIndex = 0;
+
+      const images = [1,2,3,4,5,6].map(i => `https://picsum.photos/id/${100 + (data.id || 0) + i}/800/400`);
+
+      function updateSlider() {
+        sliderContainer.innerHTML = `<img src="${images[currentIndex]}" alt="用户照片">`;
+        indicatorContainer.innerHTML = images.map((_, i) =>
+          `<div class="indicator-dot ${i === currentIndex ? 'active' : ''}" onclick="goToImage(${i})"></div>`
+        ).join('');
+      }
+
+      function nextImage() {
+        currentIndex = (currentIndex + 1) % images.length;
+        updateSlider();
+      }
+
+      function prevImage() {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        updateSlider();
+      }
+
+      function goToImage(index) {
+        currentIndex = index;
+        updateSlider();
+      }
+
+      updateSlider();
+
+      const details = [
+        `艺名: ${data.name || '未知'}`,
+        `编号: ${data.number || '未知'}`,
+        `城市: ${data.city || '未知'}`,
+        `职业: ${data.job || '未知'}`,
+        `年龄: ${data.age || '未知'}岁`,
+        `身高: 175`,
+        `体重: 53kg`,
+        `罩杯: C+`,
+        `同城/周边城市: 10天`,
+        `报销返程车票: 10天`,
+        `期望月薪: ¥10000`,
+        `对男老板要求: 懂礼貌`,
+        `是否接受闲时待命: 是`,
+        `学历: 本科`,
+        `优势介绍: 形象好，性格温柔`,
+        `纹身疤痕: 无`,
+        `结婚小孩: 无`,
+        `是否异味: 无`,
+        `是否愿意飞其他城市: 是`
+      ];
+
+      details.forEach((line, i) => {
+        const p = document.createElement('p');
+        p.textContent = `${i + 1}. ${line}`;
+        detailContainer.appendChild(p);
+      });
+    }
+  </script>
+</body>
+</html>
