@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户媒体管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#0FC6C2',
+            success: '#00B42A',
+            warning: '#FF7D00',
+            danger: '#F53F3F',
+            info: '#86909C',
+            light: '#F2F3F5',
+            dark: '#1D2129',
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .sidebar-item-active {
+        @apply bg-primary/10 text-primary border-l-4 border-primary;
+      }
+      .card-hover {
+        @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+      }
+      .btn-primary {
+        @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-all duration-200;
+      }
+      .btn-secondary {
+        @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-all duration-200;
+      }
+      .btn-danger {
+        @apply bg-danger text-white px-4 py-2 rounded-md hover:bg-danger/90 transition-all duration-200;
+      }
+      .btn-success {
+        @apply bg-success text-white px-4 py-2 rounded-md hover:bg-success/90 transition-all duration-200;
+      }
+      .form-input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+      }
+      .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+      }
+      .table-row-hover {
+        @apply hover:bg-gray-50 transition-colors duration-150;
+      }
+      .profile-section {
+        @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+      }
+      .detail-item {
+        @apply mb-3;
+      }
+      .detail-label {
+        @apply text-sm font-medium text-gray-500;
+      }
+      .detail-value {
+        @apply text-gray-800;
+      }
+      .media-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+      }
+      .edit-field {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+      }
+      .page-transition {
+        @apply transition-transform duration-300 ease-in-out;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm z-10 sticky top-0">
+    <div class="flex items-center justify-between h-16 px-4">
+      <!-- 左侧Logo和汉堡菜单 -->
+      <div class="flex items-center">
+        <button id="sidebar-toggle" class="mr-4 text-gray-500 hover:text-primary lg:hidden">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+        <a href="#" class="flex items-center">
+          <i class="fa fa-user-circle text-primary text-2xl mr-2"></i>
+          <span class="font-bold text-xl">用户管理系统</span>
+        </a>
+      </div>
+      
+      <!-- 右侧用户信息和通知 -->
+      <div class="flex items-center space-x-4">
+        <button class="relative text-gray-500 hover:text-primary transition-colors">
+          <i class="fa fa-bell text-xl"></i>
+          <span class="absolute top-0 right-0 h-4 w-4 bg-danger rounded-full flex items-center justify-center text-white text-xs">3</span>
+        </button>
+        <div class="relative">
+          <button id="user-menu-button" class="flex items-center">
+            <img src="https://picsum.photos/200/200?random=1" alt="管理员头像" class="h-8 w-8 rounded-full object-cover border-2 border-primary">
+            <span class="ml-2 hidden md:block">管理员</span>
+            <i class="fa fa-angle-down ml-1 text-gray-500"></i>
+          </button>
+          <!-- 用户下拉菜单 -->
+          <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <i class="fa fa-user-circle mr-2"></i>个人资料
+            </a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <i class="fa fa-cog mr-2"></i>设置
+            </a>
+            <div class="border-t border-gray-100 my-1"></div>
+            <a href="#" class="block px-4 py-2 text-sm text-danger hover:bg-gray-100">
+              <i class="fa fa-sign-out mr-2"></i>退出登录
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- 侧边栏 -->
+    <aside id="sidebar" class="w-64 bg-white shadow-md h-[calc(100vh-4rem)] fixed left-0 top-16 z-20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+      <nav class="py-4">
+        <div class="px-4 mb-4">
+          <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">主菜单</h5>
+        </div>
+        <a href="#user-management" class="flex items-center px-4 py-3 sidebar-item-active">
+          <i class="fa fa-users w-6 text-center"></i>
+          <span class="ml-2">用户管理</span>
+        </a>
+        <a href="#user-detail" class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+          <i class="fa fa-user-circle w-6 text-center"></i>
+          <span class="ml-2">用户详情</span>
+        </a>
+        <a href="#media-management" class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+          <i class="fa fa-image w-6 text-center"></i>
+          <span class="ml-2">媒体管理</span>
+        </a>
+        
+        <div class="px-4 pt-6 pb-2 mt-6">
+          <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">系统</h5>
+        </div>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+          <i class="fa fa-cog w-6 text-center"></i>
+          <span class="ml-2">系统设置</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+          <i class="fa fa-history w-6 text-center"></i>
+          <span class="ml-2">操作日志</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 lg:ml-64 p-4 lg:p-6 overflow-y-auto">
+      <div class="max-w-7xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-6">
+          <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">用户管理</h1>
+          <p class="text-gray-500 mt-1">查看和管理所有用户信息</p>
+        </div>
+        
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-sm text-gray-500 mb-6">
+          <a href="#" class="hover:text-primary">首页</a>
+          <i class="fa fa-angle-right mx-2 text-gray-400"></i>
+          <span class="text-gray-700">用户管理</span>
+        </div>
+        
+        <!-- 用户列表 -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+          <!-- 搜索和筛选 -->
+          <div class="p-4 border-b border-gray-100">
+            <div class="flex flex-col md:flex-row gap-4">
+              <div class="flex-1">
+                <label for="user-search" class="sr-only">搜索用户</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fa fa-search text-gray-400"></i>
+                  </div>
+                  <input type="text" id="user-search" class="form-input pl-10" placeholder="搜索用户名、编号或城市">
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select class="form-input">
+                  <option value="">所有状态</option>
+                  <option value="active">活跃</option>
+                  <option value="inactive">不活跃</option>
+                  <option value="banned">已封禁</option>
+                </select>
+                <select class="form-input">
+                  <option value="">所有城市</option>
+                  <option value="shanghai">上海</option>
+                  <option value="beijing">北京</option>
+                  <option value="guangzhou">广州</option>
+                  <option value="shenzhen">深圳</option>
+                </select>
+                <button class="btn-secondary">
+                  <i class="fa fa-filter mr-1"></i> 筛选
+                </button>
+                <button class="btn-primary">
+                  <i class="fa fa-plus mr-1"></i> 新增用户
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户表格 -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    用户信息
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    城市
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    职业
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    注册时间
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    状态
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    操作
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- 用户行 -->
+                <tr class="table-row-hover cursor-pointer" onclick="navigateToUserDetail('草莓', 'A36', 'view')">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded-full object-cover" src="images/A36/853f940d-f4e2-4104-8e9f-ddf1c9d6a0f0.png" alt="用户头像">
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">草莓</div>
+                        <div class="text-sm text-gray-500">A36</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">深圳</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">金融</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    2025-06-10
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      活跃
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-primary hover:text-primary/80 mr-3" onclick="navigateToUserDetail('草莓', 'A36', 'view', event)">查看</button>
+                    <button class="text-gray-600 hover:text-gray-900 mr-3" onclick="navigateToUserDetail('草莓', 'A36', 'edit', event)">编辑</button>
+                    <button class="text-danger hover:text-danger/80">封禁</button>
+                  </td>
+                </tr>
+                
+                <tr class="table-row-hover cursor-pointer" onclick="navigateToUserDetail('北北', 'A120', 'view')">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded-full object-cover" src="images/A120/1657e841-8ad3-48e7-a185-c64ab27c7843.png" alt="用户头像">
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">北北</div>
+                        <div class="text-sm text-gray-500">A120</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">四川成都</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">博主</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    2025-06-08
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      活跃
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-primary hover:text-primary/80 mr-3" onclick="navigateToUserDetail('北北', 'A120', 'view', event)">查看</button>
+                    <button class="text-gray-600 hover:text-gray-900 mr-3" onclick="navigateToUserDetail('北北', 'A120', 'edit', event)">编辑</button>
+                    <button class="text-danger hover:text-danger/80">封禁</button>
+                  </td>
+                </tr>
+                
+                <tr class="table-row-hover cursor-pointer" onclick="navigateToUserDetail('可乐', 'A141', 'view')">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded-full object-cover" src="images/A141/48d223ee-3f96-4d23-8c60-e7dcf048a66f.png" alt="用户头像">
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">可乐</div>
+                        <div class="text-sm text-gray-500">A141</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">广东深圳</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">离职教师</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    2025-06-05
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      待审核
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-primary hover:text-primary/80 mr-3" onclick="navigateToUserDetail('可乐', 'A141', 'view', event)">查看</button>
+                    <button class="text-gray-600 hover:text-gray-900 mr-3" onclick="navigateToUserDetail('可乐', 'A141', 'edit', event)">编辑</button>
+                    <button class="text-danger hover:text-danger/80">封禁</button>
+                  </td>
+                </tr>
+                
+                <tr class="table-row-hover cursor-pointer" onclick="navigateToUserDetail('龙龙', 'A76', 'view')">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded-full object-cover" src="images/A76/462e1b73-c57d-4b18-a118-aa5648273e2e.png" alt="用户头像">
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">龙龙</div>
+                        <div class="text-sm text-gray-500">A76</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">广东广州</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">学生</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    2025-06-01
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      已封禁
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-primary hover:text-primary/80 mr-3" onclick="navigateToUserDetail('龙龙', 'A76', 'view', event)">查看</button>
+                    <button class="text-gray-600 hover:text-gray-900 mr-3" onclick="navigateToUserDetail('龙龙', 'A76', 'edit', event)">编辑</button>
+                    <button class="text-success hover:text-success/80">解封</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 分页 -->
+          <div class="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm text-gray-700">
+                  显示第 <span class="font-medium">1</span> 至 <span class="font-medium">4</span> 条，共 <span class="font-medium">24</span> 条结果
+                </p>
+              </div>
+              <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">上一页</span>
+                    <i class="fa fa-chevron-left"></i>
+                  </a>
+                  <a href="#" aria-current="page" class="z-10 bg-primary text-white relative inline-flex items-center px-4 py-2 border border-primary text-sm font-medium">1</a>
+                  <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</a>
+                  <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</a>
+                  <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                  <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">6</a>
+                  <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">下一页</span>
+                    <i class="fa fa-chevron-right"></i>
+                  </a>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡密管理区域 -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8 p-6">
+          <h2 class="text-lg font-bold mb-4">卡密管理</h2>
+          <div class="flex flex-col md:flex-row gap-4 items-center mb-4">
+            <button id="generateCardKeyBtn" class="btn-primary flex items-center">
+              <i class="fa fa-random mr-2"></i>生成卡密
+            </button>
+            <select id="cardKeyValidity" class="form-input w-40">
+              <option value="24h">24小时</option>
+              <option value="48h">48小时</option>
+              <option value="permanent">永久</option>
+            </select>
+            <input id="cardKeyCount" type="number" min="1" max="20" value="1" class="form-input w-24" placeholder="数量">
+          </div>
+          <div id="cardKeyList" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">卡密</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">时效</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">生成时间</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                </tr>
+              </thead>
+              <tbody id="cardKeyTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 用户详情/编辑页面 -->
+  <div id="user-detail-page" class="fixed inset-0 bg-gray-50 z-40 transform translate-x-full page-transition overflow-y-auto">
+    <div class="max-w-7xl mx-auto p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <button id="back-to-user-list" class="flex items-center text-gray-600 hover:text-primary">
+            <i class="fa fa-arrow-left mr-2"></i>
+            <span>返回用户列表</span>
+          </button>
+          <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800 mt-2" id="detail-page-title">用户详情 - 草莓</h1>
+        </div>
+        <div class="flex space-x-3" id="detail-page-actions">
+          <button id="edit-user-btn" class="btn-primary flex items-center">
+            <i class="fa fa-edit mr-2"></i> 编辑用户
+          </button>
+          <button class="btn-danger flex items-center">
+            <i class="fa fa-ban mr-2"></i> 封禁用户
+          </button>
+        </div>
+      </div>
+      
+      <!-- 用户信息卡片 - 查看模式 -->
+      <div id="view-mode" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- 用户基本信息 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover lg:col-span-1">
+          <div class="flex flex-col items-center">
+            <img src="https://picsum.photos/200/200?random=20" alt="用户头像" class="h-24 w-24 rounded-full object-cover border-4 border-primary mb-4">
+            <h3 class="text-xl font-bold text-gray-900" id="view-mode-name">草莓</h3>
+            <p class="text-gray-500 mt-1" id="view-mode-code">编号: A36</p>
+            <div class="flex items-center mt-4">
+              <span class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full" id="view-mode-occupation">金融</span>
+              <span class="mx-2 text-gray-300">|</span>
+              <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full" id="view-mode-status">活跃</span>
+            </div>
+            
+            <div class="w-full mt-6">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm text-gray-600">城市</span>
+                <span class="text-sm font-medium text-gray-900" id="view-mode-city">深圳</span>
+              </div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm text-gray-600">注册时间</span>
+                <span class="text-sm font-medium text-gray-900" id="view-mode-register-date">2025-06-10</span>
+              </div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm text-gray-600">媒体数量</span>
+                <span class="text-sm font-medium text-gray-900">24</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">状态</span>
+                <span class="text-sm font-medium text-success" id="view-mode-status-text">在线</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 用户详细信息 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 card-hover lg:col-span-2">
+          <h3 class="text-lg font-bold mb-4">详细信息</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="detail-item">
+              <div class="detail-label">身高/体重/罩杯/年龄</div>
+              <div class="detail-value" id="view-height-weight">
+                <span id="view-height">166</span>cm / 
+                <span id="view-weight">49</span>kg / 
+                <span id="view-cup">B</span>罩 / 
+                <span id="view-age">22</span>岁
+              </div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">空闲时间</div>
+              <div class="detail-value" id="view-free-time">8-10天</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">期望收入</div>
+              <div class="detail-value" id="view-expectation">8w/月</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">对大哥要求</div>
+              <div class="detail-value" id="view-requirement">对我好 前期不接受WT</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">是否能同居</div>
+              <div class="detail-value" id="view-live-together">是</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">学历</div>
+              <div class="detail-value" id="view-education">留学生 学校QS排名匹配985</div>
+            </div>
+
+            <div class="detail-item md:col-span-2">
+              <div class="detail-label">个人优势</div>
+              <div class="detail-value" id="view-advantage">相貌：无整容天然脸，皮肤好，光滑无痘，肤白，冷白皮；声音甜美。情绪稳定 很会提供情绪价值 不会内耗 专长：毛笔字（软笔书法学习十余年，考取中央美术学院最高级九级，英语水平流利，兼职雅思老师。学过茶艺（雅思高分；第五届全国模拟联合国大赛最佳代表）。英文配音声优，英语口语无障碍沟通。校广播站站长，健美操队长。礼仪部部长，主持人，主持经验丰富。业务能力：牛津交换；GPA（在校成绩）校前20%，奖学金获得者发表学术论文被Google、CPCI收录（第一作者）省电视台、报社实习；作为总负责人带领团队获互联网商赛特等奖。</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">是否有纹身</div>
+              <div class="detail-value" id="view-tattoo">无</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">婚姻状况</div>
+              <div class="detail-value" id="view-marriage">否</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">是否有异味</div>
+              <div class="detail-value" id="view-smell">否</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">是否接受外地</div>
+              <div class="detail-value" id="view-travel">愿意</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 媒体管理 -->
+      <div class="bg-white rounded-lg shadow-sm p-6 card-hover lg:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">媒体管理</h3>
+          <div class="flex space-x-2">
+            <button class="btn-primary flex items-center" onclick="document.getElementById('upload-image').click()">
+              <i class="fa fa-image mr-2"></i> 上传图片
+            </button>
+            <button class="btn-primary flex items-center" onclick="document.getElementById('upload-video').click()">
+              <i class="fa fa-video-camera mr-2"></i> 上传视频
+            </button>
+            <input type="file" id="upload-image" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)">
+            <input type="file" id="upload-video" accept="video/*" class="hidden" onchange="handleVideoUpload(event)">
+          </div>
+        </div>
+
+        <!-- 图片预览 -->
+        <div class="mb-6">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">图片</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="image-preview">
+            <!-- 图片将通过JavaScript动态添加 -->
+          </div>
+        </div>
+
+        <!-- 视频预览 -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-700 mb-2">视频</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="video-preview">
+            <!-- 视频将通过JavaScript动态添加 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 编辑模式 -->
+      <div id="edit-mode" class="hidden">
+        <!-- 基本信息编辑 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h3 class="text-lg font-bold mb-4">基本信息</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">艺名</label>
+              <input type="text" id="edit-name" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">编号</label>
+              <input type="text" id="edit-number" class="form-input" disabled>
+            </div>
+            <div>
+              <label class="form-label">城市</label>
+              <input type="text" id="edit-city" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">职业</label>
+              <input type="text" id="edit-profession" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- 详细信息编辑 -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h3 class="text-lg font-bold mb-4">详细信息</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">身高(cm)</label>
+              <input type="number" id="edit-height" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">体重(kg)</label>
+              <input type="number" id="edit-weight" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">罩杯</label>
+              <select id="edit-cup" class="form-input">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">年龄</label>
+              <input type="number" id="edit-age" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">空闲时间</label>
+              <input type="text" id="edit-free-time" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">期望收入</label>
+              <input type="text" id="edit-expectation" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">对大哥要求</label>
+              <input type="text" id="edit-requirement" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">是否能同居</label>
+              <input type="text" id="edit-live-together" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">学历</label>
+              <input type="text" id="edit-education" class="form-input">
+            </div>
+            <div class="md:col-span-2">
+              <label class="form-label">个人优势</label>
+              <textarea id="edit-advantage" class="form-input h-32"></textarea>
+            </div>
+            <div>
+              <label class="form-label">是否有纹身</label>
+              <select id="edit-tattoo" class="form-input">
+                <option value="无">无</option>
+                <option value="有">有</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">婚姻状况</label>
+              <select id="edit-marriage" class="form-input">
+                <option value="否">否</option>
+                <option value="是">是</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">是否有异味</label>
+              <select id="edit-smell" class="form-input">
+                <option value="否">否</option>
+                <option value="是">是</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">是否接受外地</label>
+              <select id="edit-travel" class="form-input">
+                <option value="可以">可以</option>
+                <option value="不可以">不可以</option>
+                <option value="视情况">视情况</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      
+      <!-- 编辑模式操作按钮 -->
+      <div id="edit-mode-actions" class="flex justify-end space-x-3 mt-8 hidden">
+        <button id="cancel-edit-btn" class="btn-secondary">取消</button>
+        <button id="save-edit-btn" class="btn-primary">保存修改</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 页面状态管理
+    const userDetailPage = document.getElementById('user-detail-page');
+    const backToUserList = document.getElementById('back-to-user-list');
+    const editUserBtn = document.getElementById('edit-user-btn');
+    const viewMode = document.getElementById('view-mode');
+    const editMode = document.getElementById('edit-mode');
+    const editModeActions = document.getElementById('edit-mode-actions');
+    const detailPageActions = document.getElementById('detail-page-actions');
+    
+    // 侧边栏切换
+    document.getElementById('sidebar-toggle').addEventListener('click', function() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    });
+    
+    // 用户菜单下拉
+    document.getElementById('user-menu-button').addEventListener('click', function() {
+      const dropdown = document.getElementById('user-dropdown');
+      dropdown.classList.toggle('hidden');
+    });
+    
+    // 点击页面其他地方关闭下拉菜单
+    document.addEventListener('click', function(event) {
+      const userButton = document.getElementById('user-menu-button');
+      const dropdown = document.getElementById('user-dropdown');
+      
+      if (!userButton.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+    
+    // 用户数据管理
+    const users = {
+      'A36': {
+        name: '草莓',
+        number: 'A36',
+        city: '深圳',
+        profession: '金融',
+        height: 165,
+        weight: 48,
+        cup: 'C',
+        age: 23,
+        freeTime: '闲',
+        expectation: '10万',
+        requirement: '大佬',
+        liveTogether: '随便',
+        education: '本科',
+        advantage: '像刘亦菲',
+        tattoo: '无',
+        marriage: '否',
+        smell: '否',
+        travel: '可以',
+        status: '活跃',
+        registerDate: '2025-06-10',
+        avatar: 'images/A36/853f940d-f4e2-4104-8e9f-ddf1c9d6a0f0.png',
+        images: [
+          'images/A36/853f940d-f4e2-4104-8e9f-ddf1c9d6a0f0.png',
+          'images/A36/4792fe29-9501-4bc6-91a5-5566dabda8e8.jpg',
+          'images/A36/8b54d762-3e61-4ba5-8823-edd8ea5bd5b6.jpg'
+        ],
+        video: 'video/A36/video.mp4'
+      },
+      'A120': {
+        name: '北北',
+        number: 'A120',
+        city: '四川成都',
+        profession: '博主',
+        height: 168,
+        weight: 50,
+        cup: 'C',
+        age: 22,
+        freeTime: '弹性',
+        expectation: '8w/月',
+        requirement: '有责任心',
+        liveTogether: '可以',
+        education: '本科',
+        advantage: '性格开朗，有自己的事业',
+        tattoo: '无',
+        marriage: '否',
+        smell: '否',
+        travel: '愿意',
+        status: '活跃',
+        registerDate: '2025-06-08',
+        avatar: 'images/A120/1657e841-8ad3-48e7-a185-c64ab27c7843.png',
+        images: [
+          'images/A120/1657e841-8ad3-48e7-a185-c64ab27c7843.png',
+          'images/A120/1657e841-8ad3-48e7-a185-c64ab27c7843 (1).png',
+          'images/A120/6a188c50-333b-48c0-8cff-6aa3b1ad64e5.png'
+        ],
+        video: 'video/A120/video.mp4'
+      },
+      'A141': {
+        name: '可乐',
+        number: 'A141',
+        city: '广东深圳',
+        profession: '离职教师',
+        height: 162,
+        weight: 45,
+        cup: 'B',
+        age: 22,
+        freeTime: '充足',
+        expectation: '面议',
+        requirement: '稳定靠谱',
+        liveTogether: '可以',
+        education: '本科',
+        advantage: '有教师经验，性格温柔',
+        tattoo: '无',
+        marriage: '否',
+        smell: '否',
+        travel: '可以',
+        status: '待审核',
+        registerDate: '2025-06-05',
+        avatar: 'images/A141/48d223ee-3f96-4d23-8c60-e7dcf048a66f.png',
+        images: [
+          'images/A141/48d223ee-3f96-4d23-8c60-e7dcf048a66f.png',
+          'images/A141/6cdb4bf1-2000-4d02-bb98-965f2a80621d.png',
+          'images/A141/83332f6d-6107-4c38-ab05-270eb4c91784.png'
+        ],
+        video: 'video/A141/video.mp4'
+      },
+      'A76': {
+        name: '龙龙',
+        number: 'A76',
+        city: '广东广州',
+        profession: '学生',
+        height: 160,
+        weight: 45,
+        cup: 'B',
+        age: 20,
+        freeTime: '寒暑假',
+        expectation: '6w/月',
+        requirement: '有耐心',
+        liveTogether: '考虑',
+        education: '在读大学生',
+        advantage: '年轻活力，学习能力强',
+        tattoo: '无',
+        marriage: '否',
+        smell: '否',
+        travel: '视情况',
+        status: '已封禁',
+        registerDate: '2025-06-01',
+        avatar: 'images/A76/462e1b73-c57d-4b18-a118-aa5648273e2e.png',
+        images: [
+          'images/A76/462e1b73-c57d-4b18-a118-aa5648273e2e.png',
+          'images/A76/b6e6706e-0fb6-4392-abcd-8ef105a804b8.png',
+          'images/A76/cc558211-88fc-4dcf-9b5d-3583053d0c31.png'
+        ],
+        video: 'video/A76/video.mp4'
+      }
+    };
+
+    // 导航到用户详情页
+    function navigateToUserDetail(name, code, mode, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      
+      const userData = users[code];
+      if (!userData) {
+        showErrorToast('用户数据不存在');
+        return;
+      }
+
+      // 填充用户数据
+      document.getElementById('detail-page-title').textContent = `用户详情 - ${userData.name}`;
+      document.getElementById('view-mode-name').textContent = userData.name;
+      document.getElementById('view-mode-code').textContent = `编号: ${userData.number}`;
+      document.getElementById('view-mode-city').textContent = userData.city;
+      document.getElementById('view-mode-occupation').textContent = userData.profession;
+      
+      // 更新头像
+      const userAvatar = document.querySelector('#view-mode img');
+      userAvatar.src = userData.avatar;
+      
+      // 更新详细信息
+      document.getElementById('view-height-weight').innerHTML = `
+        <span id="view-height">${userData.height}</span>cm / 
+        <span id="view-weight">${userData.weight}</span>kg / 
+        <span id="view-cup">${userData.cup}</span>罩 / 
+        <span id="view-age">${userData.age}</span>岁
+      `;
+      
+      document.getElementById('view-free-time').textContent = userData.freeTime;
+      document.getElementById('view-expectation').textContent = userData.expectation;
+      document.getElementById('view-requirement').textContent = userData.requirement;
+      document.getElementById('view-live-together').textContent = userData.liveTogether;
+      document.getElementById('view-education').textContent = userData.education;
+      document.getElementById('view-advantage').textContent = userData.advantage;
+      document.getElementById('view-tattoo').textContent = userData.tattoo;
+      document.getElementById('view-marriage').textContent = userData.marriage;
+      document.getElementById('view-smell').textContent = userData.smell;
+      document.getElementById('view-travel').textContent = userData.travel;
+      
+      // 如果是编辑模式，填充编辑表单
+      if (mode === 'edit') {
+        document.getElementById('edit-name').value = userData.name;
+        document.getElementById('edit-number').value = userData.number;
+        document.getElementById('edit-city').value = userData.city;
+        document.getElementById('edit-profession').value = userData.profession;
+        document.getElementById('edit-height').value = userData.height;
+        document.getElementById('edit-weight').value = userData.weight;
+        document.getElementById('edit-cup').value = userData.cup.toLowerCase();
+        document.getElementById('edit-age').value = userData.age;
+        // ... 填充其他编辑字段 ...
+        
+        viewMode.classList.add('hidden');
+        editMode.classList.remove('hidden');
+        editModeActions.classList.remove('hidden');
+        detailPageActions.classList.add('hidden');
+      } else {
+        viewMode.classList.remove('hidden');
+        editMode.classList.add('hidden');
+        editModeActions.classList.add('hidden');
+        detailPageActions.classList.remove('hidden');
+      }
+
+      // 加载用户媒体
+      loadUserMedia(code);
+
+      // 显示详情页
+      userDetailPage.classList.remove('translate-x-full');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // 返回用户列表
+    backToUserList.addEventListener('click', function() {
+      userDetailPage.classList.add('translate-x-full');
+      document.body.style.overflow = '';
+    });
+    
+    // 切换编辑模式
+    editUserBtn.addEventListener('click', function() {
+      const currentUserCode = document.getElementById('view-mode-code').textContent.split(': ')[1];
+      const userData = users[currentUserCode];
+      
+      if (!userData) {
+        showErrorToast('用户数据不存在');
+        return;
+      }
+
+      // 填充编辑表单
+      document.getElementById('edit-name').value = userData.name;
+      document.getElementById('edit-number').value = userData.number;
+      document.getElementById('edit-city').value = userData.city;
+      document.getElementById('edit-profession').value = userData.profession;
+      document.getElementById('edit-height').value = userData.height;
+      document.getElementById('edit-weight').value = userData.weight;
+      document.getElementById('edit-cup').value = userData.cup;
+      document.getElementById('edit-age').value = userData.age;
+      document.getElementById('edit-free-time').value = userData.freeTime;
+      document.getElementById('edit-expectation').value = userData.expectation;
+      document.getElementById('edit-requirement').value = userData.requirement;
+      document.getElementById('edit-live-together').value = userData.liveTogether;
+      document.getElementById('edit-education').value = userData.education;
+      document.getElementById('edit-advantage').value = userData.advantage;
+      document.getElementById('edit-tattoo').value = userData.tattoo;
+      document.getElementById('edit-marriage').value = userData.marriage;
+      document.getElementById('edit-smell').value = userData.smell;
+      document.getElementById('edit-travel').value = userData.travel;
+
+      viewMode.classList.toggle('hidden');
+      editMode.classList.toggle('hidden');
+      editModeActions.classList.toggle('hidden');
+      detailPageActions.classList.toggle('hidden');
+      
+      if (editMode.classList.contains('hidden')) {
+        editUserBtn.innerHTML = '<i class="fa fa-edit mr-2"></i> 编辑用户';
+      } else {
+        editUserBtn.innerHTML = '<i class="fa fa-check mr-2"></i> 保存更改';
+      }
+    });
+    
+    // 取消编辑
+    document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+      editMode.classList.add('hidden');
+      viewMode.classList.remove('hidden');
+      editModeActions.classList.add('hidden');
+      detailPageActions.classList.remove('hidden');
+      editUserBtn.innerHTML = '<i class="fa fa-edit mr-2"></i> 编辑用户';
+    });
+    
+    // 保存编辑的更新
+    document.getElementById('save-edit-btn').addEventListener('click', function() {
+      const currentUserCode = document.getElementById('edit-number').value;
+      const formData = {
+        name: document.getElementById('edit-name').value.trim(),
+        number: currentUserCode,
+        city: document.getElementById('edit-city').value.trim(),
+        profession: document.getElementById('edit-profession').value.trim(),
+        height: parseInt(document.getElementById('edit-height').value),
+        weight: parseInt(document.getElementById('edit-weight').value),
+        cup: document.getElementById('edit-cup').value,
+        age: parseInt(document.getElementById('edit-age').value),
+        freeTime: document.getElementById('edit-free-time').value.trim(),
+        expectation: document.getElementById('edit-expectation').value.trim(),
+        requirement: document.getElementById('edit-requirement').value.trim(),
+        liveTogether: document.getElementById('edit-live-together').value.trim(),
+        education: document.getElementById('edit-education').value.trim(),
+        advantage: document.getElementById('edit-advantage').value.trim(),
+        tattoo: document.getElementById('edit-tattoo').value,
+        marriage: document.getElementById('edit-marriage').value,
+        smell: document.getElementById('edit-smell').value,
+        travel: document.getElementById('edit-travel').value
+      };
+
+      // 更新用户数据
+      users[currentUserCode] = {
+        ...users[currentUserCode],
+        ...formData
+      };
+
+      // 更新视图
+      navigateToUserDetail(formData.name, currentUserCode, 'view');
+      
+      showSuccessToast('用户信息更新成功！');
+    });
+    
+    // 显示成功提示
+    function showSuccessToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-success text-white px-4 py-3 rounded-md shadow-lg transform translate-y-[-100px] opacity-0 transition-all duration-300 flex items-center z-50';
+      toast.innerHTML = `
+        <i class="fa fa-check-circle mr-2"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(toast);
+      
+      // 显示提示
+      setTimeout(() => {
+        toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+      }, 100);
+      
+      // 隐藏提示
+      setTimeout(() => {
+        toast.classList.add('translate-y-[-100px]', 'opacity-0');
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+    
+    // 显示错误提示
+    function showErrorToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-4 right-4 bg-danger text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // 初始化
+    window.addEventListener('load', function() {
+      // 确保初始状态正确
+      editMode.classList.add('hidden');
+      editModeActions.classList.add('hidden');
+    });
+
+    // 卡密管理功能
+    let cardKeys = []; // 存储卡密列表
+
+    function generateCardKey() {
+      // 生成32位的随机字符串
+      const chars = '0123456789abcdef';
+      let result = '';
+      for (let i = 0; i < 32; i++) {
+        result += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return result;
+    }
+
+    function renderCardKeyList() {
+      const tbody = document.getElementById('cardKeyTableBody');
+      tbody.innerHTML = '';
+      
+      cardKeys.forEach((key, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="px-4 py-2 font-mono text-sm">
+            <div class="flex items-center space-x-2">
+              <span>${key.key}</span>
+              <button onclick="copyToClipboard('${key.key}')" class="text-gray-500 hover:text-primary transition-colors">
+                <i class="fa fa-copy"></i>
+              </button>
+            </div>
+          </td>
+          <td class="px-4 py-2 text-sm">${key.validity === 'permanent' ? '永久' : (key.validity === '24h' ? '24小时' : '48小时')}</td>
+          <td class="px-4 py-2 text-sm">${new Date(key.createdAt).toLocaleString()}</td>
+          <td class="px-4 py-2 text-sm">
+            ${key.used ? 
+              '<span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">已使用</span>' : 
+              '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">未使用</span>'}
+          </td>
+          <td class="px-4 py-2 text-sm">
+            <button onclick="deleteCardKey(${index})" class="text-red-600 hover:text-red-800">
+              <i class="fa fa-trash"></i> 删除
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 删除卡密
+    function deleteCardKey(index) {
+      if (confirm('确定要删除这个卡密吗？')) {
+        cardKeys.splice(index, 1);
+        renderCardKeyList();
+        showSuccessToast('卡密已删除');
+      }
+    }
+
+    // 生成卡密按钮点击事件
+    document.getElementById('generateCardKeyBtn').addEventListener('click', function() {
+      const validity = document.getElementById('cardKeyValidity').value;
+      const count = parseInt(document.getElementById('cardKeyCount').value) || 1;
+      
+      const newCardKeys = Array.from({length: count}, () => ({
+        key: generateCardKey(),
+        validity: validity,
+        createdAt: new Date().toISOString(),
+        used: false
+      }));
+
+      cardKeys = [...cardKeys, ...newCardKeys];
+      renderCardKeyList();
+      showSuccessToast('卡密生成成功！');
+    });
+
+    // 复制卡密到剪贴板的功能
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showSuccessToast('卡密已复制到剪贴板');
+      }).catch(err => {
+        console.error('复制失败:', err);
+      });
+    }
+
+    // 加载用户媒体
+    function loadUserMedia(userNumber) {
+      const user = users[userNumber];
+      if (!user) return;
+
+      const imagePreview = document.getElementById('image-preview');
+      const videoPreview = document.getElementById('video-preview');
+      
+      // 清空现有内容
+      imagePreview.innerHTML = '';
+      videoPreview.innerHTML = '';
+
+      // 加载图片
+      if (user.images && user.images.length > 0) {
+        user.images.forEach(imagePath => {
+          const imageDiv = document.createElement('div');
+          imageDiv.className = 'group relative rounded-lg overflow-hidden shadow-sm border border-gray-200 card-hover';
+          imageDiv.innerHTML = `
+            <div class="aspect-w-1 aspect-h-1 bg-gray-100">
+              <img src="${imagePath}" alt="用户图片" class="object-cover w-full h-full">
+            </div>
+            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div class="flex space-x-2">
+                <button class="bg-white p-2 rounded-full text-gray-700 hover:bg-primary hover:text-white transition-colors" onclick="viewImage('${imagePath}')">
+                  <i class="fa fa-eye"></i>
+                </button>
+                <button class="bg-white p-2 rounded-full text-gray-700 hover:bg-primary hover:text-white transition-colors" onclick="downloadMedia('${imagePath}')">
+                  <i class="fa fa-download"></i>
+                </button>
+                <button class="bg-white p-2 rounded-full text-gray-700 hover:bg-danger hover:text-white transition-colors" onclick="deleteMedia('${imagePath}')">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+          imagePreview.appendChild(imageDiv);
+        });
+      }
+
+      // 加载视频
+      if (user.video) {
+        const videoDiv = document.createElement('div');
+        videoDiv.className = 'relative rounded-lg overflow-hidden shadow-sm border border-gray-200 card-hover';
+        
+        // 获取视频文件扩展名
+        const videoExt = user.video.split('.').pop().toLowerCase();
+        const videoType = videoExt === 'mp4' ? 'video/mp4' : 
+                         videoExt === 'webm' ? 'video/webm' : 
+                         videoExt === 'ogg' ? 'video/ogg' : 'video/mp4';
+        
+        videoDiv.innerHTML = `
+          <div class="aspect-w-16 aspect-h-9 bg-black">
+            <video class="w-full h-full object-contain" controls preload="metadata" 
+                   onerror="this.classList.add('hidden'); this.parentElement.innerHTML += '<div class=\'text-white text-center p-4\'>视频加载失败</div>';">
+              <source src="${user.video}" type="${videoType}">
+              您的浏览器不支持视频播放。
+            </video>
+          </div>
+          <div class="absolute top-2 right-2 flex space-x-2 z-10">
+            <button class="bg-white p-2 rounded-full text-gray-700 hover:bg-primary hover:text-white transition-colors" onclick="downloadMedia('${user.video}')">
+              <i class="fa fa-download"></i>
+            </button>
+            <button class="bg-white p-2 rounded-full text-gray-700 hover:bg-danger hover:text-white transition-colors" onclick="deleteMedia('${user.video}')">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        `;
+        videoPreview.appendChild(videoDiv);
+
+        // 添加视频加载错误处理
+        const video = videoDiv.querySelector('video');
+        video.addEventListener('error', function(e) {
+          console.error('视频加载失败:', {
+            path: user.video,
+            error: e.target.error,
+            networkState: video.networkState,
+            readyState: video.readyState
+          });
+          showErrorToast(`视频加载失败: ${user.video}`);
+        });
+
+        // 添加视频加载成功处理
+        video.addEventListener('loadeddata', function() {
+          console.log('视频加载成功:', user.video);
+        });
+      }
+    }
+
+    // 处理图片上传
+    function handleImageUpload(event) {
+      const files = event.target.files;
+      const currentUser = document.getElementById('view-mode-code').textContent.split(': ')[1];
+      
+      if (!files.length || !users[currentUser]) return;
+
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('image', file);
+      });
+
+      // 发送到服务器
+      fetch(`/api/upload/image/${currentUser}`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // 更新用户数据
+          if (!users[currentUser].images) {
+            users[currentUser].images = [];
+          }
+          data.files.forEach(file => {
+            users[currentUser].images.push(`images/${currentUser}/${file.filename}`);
+          });
+          loadUserMedia(currentUser);
+          showSuccessToast('图片上传成功！');
+        }
+      })
+      .catch(error => {
+        console.error('上传失败:', error);
+        showErrorToast('图片上传失败，请重试');
+      });
+    }
+
+    // 处理视频上传
+    function handleVideoUpload(event) {
+      const file = event.target.files[0];
+      const currentUser = document.getElementById('view-mode-code').textContent.split(': ')[1];
+      
+      if (!file || !users[currentUser]) return;
+
+      const formData = new FormData();
+      formData.append('video', file);
+
+      // 发送到服务器
+      fetch(`/api/upload/video/${currentUser}`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // 更新用户数据
+          users[currentUser].video = `video/${currentUser}/${data.file.filename}`;
+          loadUserMedia(currentUser);
+          showSuccessToast('视频上传成功！');
+        }
+      })
+      .catch(error => {
+        console.error('上传失败:', error);
+        showErrorToast('视频上传失败，请重试');
+      });
+    }
+
+    // 查看图片
+    function viewImage(imagePath) {
+      // 创建全屏预览
+      const preview = document.createElement('div');
+      preview.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
+      preview.innerHTML = `
+        <div class="relative max-w-4xl mx-auto">
+          <img src="${imagePath}" class="max-h-[90vh] w-auto" alt="预览图片">
+          <button class="absolute top-4 right-4 text-white text-xl hover:text-gray-300" onclick="this.parentElement.parentElement.remove()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      `;
+      document.body.appendChild(preview);
+      preview.onclick = e => {
+        if (e.target === preview) preview.remove();
+      };
+    }
+
+    // 下载媒体
+    function downloadMedia(url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = url.split('/').pop();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showSuccessToast('开始下载文件');
+    }
+
+    // 删除媒体
+    function deleteMedia(url) {
+      if (!confirm('确定要删除这个文件吗？')) return;
+      
+      const currentUser = document.getElementById('view-mode-code').textContent.split(': ')[1];
+      if (!users[currentUser]) return;
+
+      const isVideo = url.startsWith('video/');
+      const filename = url.split('/').pop();
+
+      fetch(`/api/media/${currentUser}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: isVideo ? 'video' : 'image',
+          filename: filename
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (isVideo) {
+            users[currentUser].video = null;
+          } else {
+            users[currentUser].images = users[currentUser].images.filter(img => img !== url);
+          }
+          loadUserMedia(currentUser);
+          showSuccessToast('文件已删除');
+        }
+      })
+      .catch(error => {
+        console.error('删除失败:', error);
+        showErrorToast('删除失败，请重试');
+      });
+    }
+  </script>
+</body>
+</html>
